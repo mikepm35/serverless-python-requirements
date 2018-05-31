@@ -7,12 +7,16 @@ setup() {
         export LC_ALL=C.UTF-8
         export LANG=C.UTF-8
     fi
+    export USR_CACHE_DIR=`node -e 'console.log(require("./lib/shared").getUserCachePath())'`
 }
 
 teardown() {
     rm -rf puck puck2 puck3 node_modules .serverless .requirements.zip .requirements-cache \
         foobar package-lock.json serverless-python-requirements-*.tgz
     if [ -f serverless.yml.bak ]; then mv serverless.yml.bak serverless.yml; fi
+    if [ -d "${USR_CACHE_DIR}" ] ; then
+        rm -Rf "${USR_CACHE_DIR}"
+    fi
 }
 
 @test "py3.6 can package flask with default options" {
@@ -68,13 +72,42 @@ teardown() {
     ls puck/flask
 }
 
-@test "py3.6 uses cache with dockerizePip option" {
+@test "py3.6 uses download cache with useDownloadCache option" {
     cd tests/base
     npm i $(npm pack ../..)
     ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
-    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    pipCmdExtraArgs: ["--cache-dir", ".requirements-cache"]/' serverless.yml
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useDownloadCache: true/' serverless.yml
+    sls package
+    USR_CACHE_DIR=`node -e 'console.log(require("../../lib/shared").getUserCachePath())'`
+    ls $USR_CACHE_DIR/downloadCacheslspyc/http
+}
+
+@test "py3.6 uses download cache with useDownloadCache + cacheLocation option" {
+    cd tests/base
+    npm i $(npm pack ../..)
+    ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useDownloadCache: true\n    cacheLocation: .requirements-cache/' serverless.yml
+    sls package
+    ls .requirements-cache/downloadCacheslspyc/http
+}
+
+@test "py3.6 uses download cache with dockerizePip + useDownloadCache option" {
+    cd tests/base
+    npm i $(npm pack ../..)
+    ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useDownloadCache: true/' serverless.yml
     sls --dockerizePip=true package
-    ls .requirements-cache/http
+    USR_CACHE_DIR=`node -e 'console.log(require("../../lib/shared").getUserCachePath())'`
+    ls $USR_CACHE_DIR/downloadCacheslspyc/http
+}
+
+@test "py3.6 uses download cache with dockerizePip + useDownloadCache + cacheLocation option" {
+    cd tests/base
+    npm i $(npm pack ../..)
+    ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useDownloadCache: true\n    cacheLocation: .requirements-cache/' serverless.yml
+    sls --dockerizePip=true package
+    ls .requirements-cache/downloadCacheslspyc/http
 }
 
 @test "py2.7 can package flask with default options" {
