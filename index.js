@@ -11,7 +11,7 @@ const {
 const { injectAllRequirements } = require('./lib/inject');
 const { installAllRequirements } = require('./lib/pip');
 const { pipfileToRequirements } = require('./lib/pipenv');
-const {cleanup, cleanupCache} = require('./lib/clean');
+const { cleanup, cleanupCache } = require('./lib/clean');
 
 BbPromise.promisifyAll(fse);
 
@@ -110,18 +110,18 @@ class ServerlessPythonRequirements {
             lifecycleEvents: ['install']
           },
           cleanCache: {
-            usage: 'Removes all items in the pip download/static cache (if present)',
-            lifecycleEvents: [
-              'cleanCache',
-            ],
-          },
+            usage:
+              'Removes all items in the pip download/static cache (if present)',
+            lifecycleEvents: ['cleanCache']
+          }
         }
       }
     };
 
-    const clean = () => BbPromise.bind(this)
-      .then(cleanup)
-      .then(removeVendorHelper);
+    const clean = () =>
+      BbPromise.bind(this)
+        .then(cleanup)
+        .then(removeVendorHelper);
 
     const before = () => {
       if (
@@ -161,8 +161,7 @@ class ServerlessPythonRequirements {
       return BbPromise.resolve();
     };
 
-    const cleanCache = () => BbPromise.bind(this)
-      .then(cleanupCache);
+    const cleanCache = () => BbPromise.bind(this).then(cleanupCache);
 
     this.hooks = {
       'after:package:cleanup': invalidateCaches,
@@ -172,7 +171,7 @@ class ServerlessPythonRequirements {
       'after:deploy:function:packageFunction': after,
       'requirements:install:install': before,
       'requirements:clean:clean': clean,
-      'requirements:cleanCache:cleanCache': cleanCache,
+      'requirements:cleanCache:cleanCache': cleanCache
     };
   }
 }
