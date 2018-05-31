@@ -8,6 +8,9 @@ setup() {
         export LANG=C.UTF-8
     fi
     export USR_CACHE_DIR=`node -e 'console.log(require("./lib/shared").getUserCachePath())'`
+    if [ -d "${USR_CACHE_DIR}" ] ; then
+      rm -Rf "${USR_CACHE_DIR}"
+    fi
 }
 
 teardown() {
@@ -108,6 +111,52 @@ teardown() {
     perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useDownloadCache: true\n    cacheLocation: .requirements-cache/' serverless.yml
     sls --dockerizePip=true package
     ls .requirements-cache/downloadCacheslspyc/http
+}
+
+@test "py3.6 uses static and download cache with useStaticCache and useDownloadCache option" {
+    cd tests/base
+    npm i $(npm pack ../..)
+    ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useDownloadCache: true\n    useStaticCache: true/' serverless.yml
+    sls package
+    USR_CACHE_DIR=`node -e 'console.log(require("../../lib/shared").getUserCachePath())'`
+    ls $USR_CACHE_DIR/b8b9d2be59f6f2ea5778e8b2aa4d2ddc_slspyc/flask
+    ls $USR_CACHE_DIR/downloadCacheslspyc/http
+}
+
+@test "py3.6 uses static cache with useStaticCache option" {
+    cd tests/base
+    npm i $(npm pack ../..)
+    ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useStaticCache: true/' serverless.yml
+    sls package
+    USR_CACHE_DIR=`node -e 'console.log(require("../../lib/shared").getUserCachePath())'`
+    ls $USR_CACHE_DIR/b8b9d2be59f6f2ea5778e8b2aa4d2ddc_slspyc/flask
+    ls $USR_CACHE_DIR/b8b9d2be59f6f2ea5778e8b2aa4d2ddc_slspyc/.completed_requirements
+}
+
+@test "py3.6 uses static cache with useStaticCache option + cacheLocation option" {
+    cd tests/base
+    npm i $(npm pack ../..)
+    ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useStaticCache: true\n    cacheLocation: .requirements-cache/' serverless.yml
+    sls package
+    USR_CACHE_DIR=`node -e 'console.log(require("../../lib/shared").getUserCachePath())'`
+    ls .requirements-cache/b8b9d2be59f6f2ea5778e8b2aa4d2ddc_slspyc/flask
+    ls .requirements-cache/b8b9d2be59f6f2ea5778e8b2aa4d2ddc_slspyc/.completed_requirements
+}
+
+@test "py3.6 checking that static cache actually pulls from cache (by poisoning it)" {
+    cd tests/base
+    npm i $(npm pack ../..)
+    ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useStaticCache: true/' serverless.yml
+    sls package
+    cp .serverless/sls-py-req-test.zip ./puck
+    USR_CACHE_DIR=`node -e 'console.log(require("../../lib/shared").getUserCachePath())'`
+    echo "injected new file into static cache folder" > $USR_CACHE_DIR/b8b9d2be59f6f2ea5778e8b2aa4d2ddc_slspyc/injected_file_is_bad_form
+    sls package
+    [ `wc -c ./.serverless/sls-py-req-test.zip | awk '{ print $1 }'` -gt `wc -c ./puck | awk '{ print $1 }'` ]
 }
 
 @test "py2.7 can package flask with default options" {
