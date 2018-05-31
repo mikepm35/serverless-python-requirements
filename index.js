@@ -11,7 +11,7 @@ const {
 const { injectAllRequirements } = require('./lib/inject');
 const { installAllRequirements } = require('./lib/pip');
 const { pipfileToRequirements } = require('./lib/pipenv');
-const { cleanup } = require('./lib/clean');
++const {cleanup, cleanupCache} = require('./lib/clean');
 
 BbPromise.promisifyAll(fse);
 
@@ -36,6 +36,10 @@ class ServerlessPythonRequirements {
         dockerSsh: false,
         dockerImage: null,
         dockerFile: null,
+        useStaticCache: false,
+        useDownloadCache: false,
+        cacheLocation: false,
+        staticCacheMaxVersions: 0,
         pipCmdExtraArgs: [],
         noDeploy: [
           'boto3',
@@ -95,6 +99,7 @@ class ServerlessPythonRequirements {
 
     this.commands = {
       requirements: {
+        usage: 'serverless-python-requirements plugin commands (see below)',
         commands: {
           clean: {
             usage: 'Remove .requirements and requirements.zip',
@@ -103,10 +108,20 @@ class ServerlessPythonRequirements {
           install: {
             usage: 'install requirements manually',
             lifecycleEvents: ['install']
-          }
+          },
+          cleanCache: {
+            usage: 'Removes all items in the pip download/static cache (if present)',
+            lifecycleEvents: [
+              'cleanCache',
+            ],
+          },
         }
       }
     };
+
+    const clean = () => BbPromise.bind(this)
+      .then(cleanup)
+      .then(removeVendorHelper);
 
     const before = () => {
       if (
@@ -141,12 +156,13 @@ class ServerlessPythonRequirements {
 
     const invalidateCaches = () => {
       if (this.options.invalidateCaches) {
-        return BbPromise.bind(this)
-          .then(cleanup)
-          .then(removeVendorHelper);
+        return clean;
       }
       return BbPromise.resolve();
     };
+
+    const cleanCache = () => BbPromise.bind(this)
+      .then(cleanupCache);
 
     this.hooks = {
       'after:package:cleanup': invalidateCaches,
@@ -154,16 +170,9 @@ class ServerlessPythonRequirements {
       'after:package:createDeploymentArtifacts': after,
       'before:deploy:function:packageFunction': before,
       'after:deploy:function:packageFunction': after,
-      'requirements:install:install': () =>
-        BbPromise.bind(this)
-          .then(pipfileToRequirements)
-          .then(addVendorHelper)
-          .then(installAllRequirements)
-          .then(packRequirements),
-      'requirements:clean:clean': () =>
-        BbPromise.bind(this)
-          .then(cleanup)
-          .then(removeVendorHelper)
+      'requirements:install:install': before,
+      'requirements:clean:clean': clean,
+      'requirements:cleanCache:cleanCache': cleanCache,
     };
   }
 }
