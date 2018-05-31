@@ -11,7 +11,7 @@ const {
 const { injectAllRequirements } = require('./lib/inject');
 const { installAllRequirements } = require('./lib/pip');
 const { pipfileToRequirements } = require('./lib/pipenv');
-+const {cleanup, cleanupCache} = require('./lib/clean');
+const {cleanup, cleanupCache} = require('./lib/clean');
 
 BbPromise.promisifyAll(fse);
 
