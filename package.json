@@ -55,10 +55,11 @@
     "jszip": "^3.1.0",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "lodash.values": "^4.3.0",
     "lodash.uniqby": "^4.0.0",
+    "lodash.values": "^4.3.0",
     "md5-file": "^3.2.3",
-    "rimraf": "^2.6.2"
+    "rimraf": "^2.6.2",
+    "shell-quote": "^1.6.1"
   },
   "eslintConfig": {
     "extends": "eslint:recommended",

@@ -96,7 +96,7 @@ teardown() {
     ls $USR_CACHE_DIR/downloadCacheslspyc/http
 }
 
-@test "py3.6 uses download cache with useDownloadCache + cacheLocation option" {
+@test "py3.6 uses download cache with cacheLocation option" {
     cd tests/base
     npm i $(npm pack ../..)
     ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
@@ -105,7 +105,7 @@ teardown() {
     ls .requirements-cache/downloadCacheslspyc/http
 }
 
-@test "py3.6 uses download cache with dockerizePip + useDownloadCache option" {
+@test "py3.6 uses download cache with dockerizePip option" {
     cd tests/base
     npm i $(npm pack ../..)
     ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
@@ -115,7 +115,7 @@ teardown() {
     ls $USR_CACHE_DIR/downloadCacheslspyc/http
 }
 
-@test "py3.6 uses download cache with dockerizePip + useDownloadCache + cacheLocation option" {
+@test "py3.6 uses download cache with dockerizePip + cacheLocation option" {
     cd tests/base
     npm i $(npm pack ../..)
     ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
@@ -124,7 +124,7 @@ teardown() {
     ls .requirements-cache/downloadCacheslspyc/http
 }
 
-@test "py3.6 uses static and download cache with useStaticCache and useDownloadCache option" {
+@test "py3.6 uses static and download cache" {
     cd tests/base
     npm i $(npm pack ../..)
     ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
@@ -135,7 +135,18 @@ teardown() {
     ls $USR_CACHE_DIR/downloadCacheslspyc/http
 }
 
-@test "py3.6 uses static cache with useStaticCache option" {
+@test "py3.6 uses static and download cache with dockerizePip option" {
+    cd tests/base
+    npm i $(npm pack ../..)
+    ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    useDownloadCache: true\n    useStaticCache: true/' serverless.yml
+    sls --dockerizePip=true package
+    USR_CACHE_DIR=`node -e 'console.log(require("../../lib/shared").getUserCachePath())'`
+    ls $USR_CACHE_DIR/b8b9d2be59f6f2ea5778e8b2aa4d2ddc_slspyc/flask
+    ls $USR_CACHE_DIR/downloadCacheslspyc/http
+}
+
+@test "py3.6 uses static cache" {
     cd tests/base
     npm i $(npm pack ../..)
     ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
@@ -146,7 +157,7 @@ teardown() {
     ls $USR_CACHE_DIR/b8b9d2be59f6f2ea5778e8b2aa4d2ddc_slspyc/.completed_requirements
 }
 
-@test "py3.6 uses static cache with useStaticCache option + cacheLocation option" {
+@test "py3.6 uses static cache with cacheLocation option" {
     cd tests/base
     npm i $(npm pack ../..)
     ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
