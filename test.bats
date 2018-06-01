@@ -26,8 +26,8 @@ teardown() {
     cd tests/base
     npm i $(npm pack ../..)
     ! uname -sm|grep Linux || groups|grep docker || id -u|egrep '^0$' || skip "can't dockerize on linux if not root & not in docker group"
-    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    fileName: requirements-custom.txt/' serverless.yml
-    echo "requests" > requirements-custom.txt
+    perl -p -i'.bak' -e 's/(pythonRequirements:$)/\1\n    fileName: puck/' serverless.yml
+    echo "requests" > puck
     sls package
     ls .serverless/requirements/requests
     ! ls .serverless/requirements/flask
