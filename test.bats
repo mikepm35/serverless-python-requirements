@@ -323,6 +323,21 @@ teardown() {
     ls puck/lambda_decorators.py
 }
 
+@test "py3.6 can package lambda-decorators using vendor and invidiually option" {
+    cd tests/base
+    npm i $(npm pack ../..)
+    sls --individually=true --vendor=./vendor package
+    unzip .serverless/hello.zip -d puck
+    unzip .serverless/hello2.zip -d puck2
+    unzip .serverless/hello3.zip -d puck3
+    ls puck/flask
+    ls puck2/flask
+    ! ls puck3/flask
+    ls puck/lambda_decorators.py
+    ls puck2/lambda_decorators.py
+    ! ls puck3/lambda_decorators.py
+}
+
 @test "Don't nuke execute perms" {
     cd tests/base
     npm i $(npm pack ../..)
