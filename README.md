@@ -95,7 +95,28 @@ try:
 except ImportError:
   pass
 ```
-
+### Slim Package
+_Works on non 'win32' environments: Docker, WSL are included_  
+To remove the tests, information and caches from the installed packages, 
+enable the `slim` option. This will: `strip` the `.so` files, remove `__pycache__` 
+directories and `dist-info` directories.  
+```yaml
+custom:
+  pythonRequirements:
+    slim: true
+```  
+#### Custom Removal Patterns  
+To specify additional directories to remove from the installed packages, 
+define the patterns using regex as a `slimPatterns` option in serverless config:  
+```yaml
+custom:
+  pythonRequirements:
+    slim: true
+    slimPatterns:
+      - "*.egg-info*"
+```  
+This will remove all folders within the installed requirements that match 
+the names in `slimPatterns`  
 ## Omitting Packages 
 You can omit a package from deployment with the `noDeploy` option. Note that
 dependencies of omitted packages must explicitly be omitted too.
@@ -239,7 +260,7 @@ custom:
 ## :apple::beer::snake: Mac Brew installed Python notes
 [Brew wilfully breaks the `--target` option with no seeming intention to fix it](https://github.com/Homebrew/brew/pull/821)
 which causes issues since this uses that option. There are a few easy workarounds for this:
-* Install Python from [python.org](https://wwwpython.org/downloads/) and specify it with the
+* Install Python from [python.org](https://www.python.org/downloads/) and specify it with the
 [`pythonBin` option](#customize-python-executable).
 
 OR
@@ -282,3 +303,4 @@ For usage of `dockerizePip` on Windows do Step 1 only if running serverless on w
    switched to adding files straight to zip instead of creating symlinks, and
    improved pip chache support when using docker.
  * [@andrewfarley](https://github.com/andrewfarley) - Implemented download caching and static caching
+ * [@dee-me-tree-or-love](https://github.com/dee-me-tree-or-love) - the `slim` package option
